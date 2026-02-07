@@ -1,0 +1,88 @@
+btn.innerText = "Engage Perimeter";
+                btn.className = "btn-premium w-full max-w-sm py-10 bg-indigo-600 text-white rounded-[3.5rem] font-black text-sm tracking-[0.4em] shadow-2xl transition-all uppercase";
+                iconBg.className = "p-16 rounded-full bg-indigo-500/10 mb-10";
+                document.getElementById('node-text').innerText = "Uplink: Online";
+                threat.innerText = "NOMINAL";
+                threat.className = "text-emerald-500";
+                threatBar.className = "h-full bg-emerald-500 w-[10%]";
+            } else if (state === 'armed') {
+                h1.innerText = "ARMED";
+                p.innerText = "Node_01 Scanning Active";
+                led.classList.add('bg-indigo-500', 'shadow-[0_0_15px_#6366f1]');
+                btn.innerText = "Disarm Grid";
+                btn.className = "btn-premium w-full max-w-sm py-10 bg-slate-900 text-red-500 border border-red-500/30 rounded-[3.5rem] font-black text-sm tracking-[0.4em] transition-all uppercase";
+                laser.classList.remove('hidden');
+                iconBg.className = "p-16 rounded-full bg-indigo-600 mb-10 shadow-[0_0_60px_#6366f1]";
+                threat.innerText = "SCANNING";
+                threat.className = "text-indigo-400";
+                threatBar.className = "h-full bg-indigo-500 w-[40%]";
+            } else if (state === 'alert') {
+                h1.innerText = "BREACH";
+                p.innerText = "Intrusion Sequence Active";
+                card.classList.add('breach-mode');
+                led.classList.add('bg-red-500', 'animate-ping');
+                btn.innerText = "Clear Alert";
+                btn.className = "btn-premium w-full max-w-sm py-10 bg-white text-black rounded-[3.5rem] font-black text-sm tracking-[0.4em] transition-all uppercase";
+                iconBg.className = "p-16 rounded-full bg-red-500 mb-10 shadow-[0_0_120px_#ef4444]";
+                threat.innerText = "CRITICAL";
+                threat.className = "text-red-500 animate-pulse";
+                threatBar.className = "h-full bg-red-500 w-full";
+            }
+        }
+
+        function addTacticalLog(msg, level) {
+            const list = document.getElementById('log-list');
+            const div = document.createElement('div');
+            div.className = "p-5 bg-white/[0.03] rounded-3xl border border-white/5 animate-in slide-in-from-right-4";
+            const color = level === 'error' ? 'text-red-500' : level === 'success' ? 'text-emerald-500' : 'text-indigo-400';
+            div.innerHTML = `
+                <div class="flex justify-between text-[9px] font-black mb-3 tracking-widest uppercase opacity-40">
+                    <span class="${color}">[${level}]</span>
+                    <span>${new Date().toLocaleTimeString()}</span>
+                </div>
+                <p class="text-[12px] font-bold text-slate-200 uppercase tracking-wide italic leading-tight">${msg}</p>
+            `;
+            list.prepend(div);
+        }
+
+        function drawLoop() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (demoActive) {
+                rawVal = 960 + Math.floor(Math.random() * 40);
+                dataBuffer.push(rawVal);
+                dataBuffer.shift();
+            }
+
+            document.getElementById('raw-value').innerText = String(rawVal).padStart(4, '0');
+            const w = canvas.width / dataBuffer.length;
+
+            dataBuffer.forEach((v, i) => {
+                const h = (v / 1023) * canvas.height;
+                ctx.fillStyle = (v < 500 && v > 0) ? '#ff4757' : 'rgba(99, 102, 241, 0.4)';
+                ctx.beginPath();
+                ctx.roundRect(i * w, canvas.height - h, w - 2, h, 3);
+                ctx.fill();
+            });
+            requestAnimationFrame(drawLoop);
+        }
+
+        function testAlarm() {
+            alarmSiren.play();
+            setTimeout(() => { alarmSiren.pause(); alarmSiren.currentTime = 0; }, 3000);
+            addTacticalLog("DRIVER TEST: SIREN TRIGGERED", "info");
+        }
+
+        document.getElementById('audio-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                alarmSiren.src = URL.createObjectURL(file);
+                document.getElementById('audio-name').innerText = file.name;
+                addTacticalLog("ASSET UPLINK SUCCESS: " + file.name, "success");
+            }
+        });
+    </script>
+</body>
+</html>
